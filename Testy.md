@@ -1,122 +1,97 @@
-Przechodzimy od projektowania do kluczowego etapu zapewnienia jakości i niezawodności. Stworzenie solidnego pakietu testów automatycznych jest nie tylko dobrą praktyką deweloperską, ale w branży legaltech stanowi fundament budowania zaufania i ograniczania ryzyka prawnego.
+Przechodzimy teraz do absolutnie krytycznej płaszczyzny, która dla profesjonalnej kancelarii prawnej jest równie ważna, co funkcjonalność samego systemu – do bezpieczeństwa. Błąd w tej dziedzinie to nie tylko problem techniczny, ale fundamentalne ryzyko biznesowe, reputacyjne i prawne.
 
-Poniżej przedstawiam kompletną strategię testowania, szczegółowe scenariusze do zaimplementowania oraz – co kluczowe – analizę prawną, która nadaje tym testom głębszy, biznesowy sens.
+Poniżej przedstawiam analizę zagrożeń dla każdego z kluczowych użytkowników oraz konkretne rekomendacje techniczne, ujęte w formie, która pozwoli Kancelarii ocenić, gdzie należy położyć największy nacisk.
 
----
+Wprowadzenie: Bezpieczeństwo jako Fundament Zaufania
 
-### **Wprowadzenie: Dlaczego Testowanie Jest Krytyczne dla Tej Platformy?**
+Dla platformy legaltech, bezpieczeństwo nie jest dodatkiem. Jest to rdzeń produktu. Państwa system będzie przechowywał jedne z najbardziej wrażliwych danych – informacje objęte tajemnicą adwokacką/radcowską, dane osobowe, szczegóły spraw sądowych. Każdy element systemu musi być projektowany tak, jakby był cyfrową kasą pancerną. Poniższa analiza wskazuje najsłabsze punkty i sposoby ich zabezpieczenia.
 
-W naszym projekcie testy nie tylko weryfikują, czy kod działa. One **gwarantują, że proces prawny jest spójny, bezpieczny i zgodny z założeniami**. Błędy w systemie mogłyby prowadzić do udostępnienia poufnych danych, wygenerowania nieprawidłowych pism lub zerwania ścieżki audytowej, co niosłoby za sobą poważne konsekwencje. Naszym celem jest stworzenie "cyfrowego notariusza" – systemu, któremu można bezwzględnie ufać.
+Analiza Zagrożeń i Kluczowe Testy Bezpieczeństwa
+1. Użytkownik (Klient)
 
-### **Strategia Testowania: Piramida Jakości**
+Największe Zagrożenie: Przejęcie konta (Account Takeover) poprzez wyłudzenie danych uwierzytelniających (phishing) lub słabe hasło. Atakujący uzyskuje dostęp do całej historii spraw klienta.
 
-Zastosujemy sprawdzony model "piramidy testów", aby zapewnić maksymalne pokrycie przy optymalnym koszcie i szybkości.
+Scenariusz Ataku: Klient otrzymuje fałszywy e-mail, który wygląda jak powiadomienie z Państwa serwisu ("Twoja analiza jest gotowa! Zaloguj się tutaj"). Link prowadzi do sklonowanej strony logowania. Klient wpisuje login i hasło, które trafiają prosto do atakującego.
 
-1.  **Testy Jednostkowe (Unit Tests) - Fundament:** Szybkie testy weryfikujące małe, odizolowane fragmenty logiki (funkcje, komponenty).
-2.  **Testy Integracyjne (Integration Tests) - Spoiwo:** Testy sprawdzające współpracę kilku modułów, np. czy API poprawnie komunikuje się z bazą danych.
-3.  **Testy End-to-End (E2E) - Weryfikacja Biznesowa:** Pełna symulacja ścieżki użytkownika w przeglądarce, od logowania po finalny rezultat. Są najwolniejsze, ale dają największą pewność co do działania całego systemu.
+Kluczowe Testy Bezpieczeństwa do Implementacji:
 
----
+Test Wymuszenia Uwierzytelniania Wieloskładnikowego (MFA): Najważniejsze zabezpieczenie. Czy system pozwala na (a najlepiej wymusza) powiązanie konta z aplikacją typu Google Authenticator lub kodem SMS przy każdym logowaniu z nowego urządzenia?
 
-### **Co Należy Zaimplementować: Sekwencja Działań i Przykłady**
+Test Polityki Haseł: Czy system odrzuca proste hasła (np. "haslo123") i wymaga odpowiedniej złożoności?
 
-#### **Krok 1: Testy Jednostkowe (Unit Tests)**
+Test Ochrony przed Atakami Brute-Force: Czy system tymczasowo blokuje konto po 5 nieudanych próbach logowania?
 
-Te testy piszemy jako pierwsze, równolegle z tworzeniem kodu.
+Test Bezpieczeństwa Sesji: Czy sesja użytkownika wygasa automatycznie po np. 30 minutach bezczynności? Czy wylogowanie faktycznie unieważnia token sesji na serwerze?
 
-**Narzędzia:** `Jest` lub `Vitest`.
+2. Operator
 
-**Co testujemy?**
-*   **Funkcja walidacji pliku:**
-    *   `czy_plik_jest_czytelny(plik_testowy_rozmyty)` -> zwraca `false`.
-    *   `czy_plik_jest_czytelny(plik_testowy_wyrazny)` -> zwraca `true`.
-    *   `czy_format_jest_poprawny('.exe')` -> zwraca `false`.
-*   **Funkcja budowania promptu dla AI:**
-    *   `zbuduj_prompt(tekst_pisma, dyrektywy)` -> sprawdź, czy wynikowy string zawiera zarówno tekst pisma, jak i wszystkie dyrektywy.
-*   **Komponenty Frontendowe (w izolacji):**
-    *   Czy komponent `<CaseStatusViewer>` poprawnie renderuje status "Analiza w toku", gdy otrzyma taki `prop`?
-    *   Czy przycisk w `<FileUploadForm>` jest nieaktywny podczas przesyłania pliku?
+Największe Zagrożenie: Eskalacja uprawnień i nieautoryzowany dostęp do danych. Operator ma dostęp do wielu spraw. Kompromitacja jego konta daje atakującemu wgląd w dane dziesiątek lub setek klientów.
 
-#### **Krok 2: Testy Integracyjne (Integration Tests)**
+Scenariusz Ataku: Atakujący, wykorzystując konto jednego Operatora, próbuje uzyskać dostęp do spraw przypisanych do innego Operatora. Robi to poprzez manipulację identyfikatorami w adresie URL (np. zmieniając .../case/123 na .../case/124).
 
-Testujemy współpracę kluczowych modułów backendowych.
+Kluczowe Testy Bezpieczeństwa do Implementacji:
 
-**Narzędzia:** `Jest`/`Vitest` z `Supertest` (do testowania API).
+Test Kontroli Dostępu (Broken Access Control): Najważniejszy test dla tej roli. Należy napisać automatyczny test, który loguje się jako Operator_A i próbuje wykonać akcje (pobrać, edytować, zatwierdzić) na sprawach należących do Operatora_B. System musi zwrócić błąd "Brak uprawnień" (403 Forbidden).
 
-**Co testujemy?**
-*   **Endpoint `POST /api/cases/upload`:**
-    *   **Scenariusz:** Wysyłamy poprawny plik na ten endpoint.
-    *   **Weryfikacja:**
-        1.  Czy API zwróciło status `200 OK` i `caseId`?
-        2.  Czy w bazie danych powstał nowy rekord w tabeli `Sprawy` ze statusem `VALIDATING`?
-        3.  Czy została wywołana (zamockowana) funkcja `validation_pipeline` z odpowiednimi argumentami?
-*   **Interakcja z Bazą Danych:**
-    *   **Scenariusz:** Wywołujemy funkcję `zmien_status_sprawy(caseId, 'OPERATOR_REVIEW')`.
-    *   **Weryfikacja:** Sprawdzamy bezpośrednio w testowej bazie danych, czy status dla danego `caseId` został poprawnie zaktualizowany.
+Test Integralności Logów Audytowych: Czy Operator (lub atakujący z jego konta) może zmodyfikować lub usunąć wpisy w dzienniku zdarzeń, aby zatrzeć ślady swoich działań? Test powinien próbować wykonać nieautoryzowaną operację DELETE na logach poprzez spreparowane zapytanie API.
 
-#### **Krok 3: Testy End-to-End (E2E) - Pełna Symulacja Procesu**
+Test Walidacji Danych Wejściowych: Czy system jest odporny na wstrzykiwanie złośliwego kodu (np. XSS) w polach komentarzy dla AI? Atakujący mógłby w ten sposób spróbować przejąć sesję innego Operatora, który otworzy zainfekowaną sprawę.
 
-To jest symulacja Państwa głównego procesu biznesowego.
+3. Administrator
 
-**Narzędzia:** `Cypress` lub `Playwright`.
+Największe Zagrożenie: Kompromitacja całego systemu. Konto administratora ma najwyższe uprawnienia. Jego przejęcie oznacza najczęściej dostęp do całej bazy danych, plików wszystkich klientów i możliwość zniszczenia lub kradzieży całego systemu.
 
-**Scenariusz do zaimplementowania: "Pełna Cyfrowa Ścieżka Sprawy"**
+Scenariusz Ataku: Atakujący odkrywa, że panel administracyjny używa przestarzałej biblioteki z publicznie znaną luką bezpieczeństwa. Wykorzystuje tę lukę do zdalnego wykonania kodu na serwerze, omijając logowanie i uzyskując pełną kontrolę.
 
-**Przygotowanie (Setup):** Przed każdym testem system automatycznie czyści bazę danych i tworzy dwóch użytkowników: `test_klient@example.com` oraz `test_operator@example.com`.
+Kluczowe Testy Bezpieczeństwa do Implementacji:
 
-**Część 1: Klient Inicjuje Sprawę**
-1.  **GIVEN:** Użytkownik jest na stronie logowania.
-2.  **WHEN:** Wpisuje `test_klient@example.com` i hasło, a następnie klika "Zaloguj".
-3.  **THEN:** Zostaje przekierowany do swojego Panelu Klienta.
-4.  **WHEN:** Klika "Rozpocznij nową sprawę" i przesyła **poprawny, czytelny plik PDF** (`pismo_testowe.pdf`).
-5.  **THEN:** W widoku sprawy widzi status zmieniający się na "Weryfikacja formalna", a po chwili na "Analiza w toku".
-6.  **AND:** Po pewnym czasie (symulującym pracę AI), status zmienia się na "Oczekuje na weryfikację Operatora".
-7.  **FINALLY:** Użytkownik się wylogowuje.
+Test Skanowania Podatności Zależności: Należy zintegrować z procesem budowania aplikacji narzędzia (np. Snyk, npm audit), które automatycznie skanują wszystkie zewnętrzne biblioteki w poszukiwaniu znanych luk bezpieczeństwa.
 
-**Część 2: Operator Weryfikuje i Odsyła Dokument**
-1.  **GIVEN:** Użytkownik jest na stronie logowania.
-2.  **WHEN:** Wpisuje `test_operator@example.com` i hasło, a następnie klika "Zaloguj".
-3.  **THEN:** Zostaje przekierowany do swojego Panelu Operatora i na liście zadań widzi nową sprawę zainicjowaną przez klienta.
-4.  **WHEN:** Klika w tę sprawę, widzi treść dokumentu i wygenerowany przez AI projekt odpowiedzi. Dokonuje drobnej **edycji ręcznej** w tekście i klika przycisk **"Zatwierdź i wyślij do klienta"**.
-5.  **THEN:** Sprawa znika z jego listy aktywnych zadań.
-6.  **FINALLY:** Użytkownik się wylogowuje.
+Test Ograniczenia Dostępu do Panelu Admina: Czy panel administracyjny jest dostępny publicznie z internetu? Dostęp do niego powinien być rygorystycznie ograniczony, np. tylko do konkretnych, zaufanych adresów IP (biuro Kancelarii).
 
-**Część 3: Klient Odbiera i Akceptuje Finalny Dokument**
-1.  **GIVEN:** Użytkownik jest na stronie logowania.
-2.  **WHEN:** Ponownie loguje się jako `test_klient@example.com`.
-3.  **THEN:** W panelu sprawy widzi status "Gotowe do wglądu".
-4.  **AND:** Widoczny jest przycisk "Pobierz dokument".
-5.  **WHEN:** Klika przycisk "Pobierz dokument".
-6.  **THEN:** Rozpoczyna się pobieranie pliku, a jego treść zawiera **dokładnie te zmiany, które wprowadził Operator**.
-7.  **WHEN:** Klient klika przycisk "Akceptuję dokument".
-8.  **THEN:** Status sprawy zmienia się na "Zakończona".
+Testy Penetracyjne (Pentesty): To "złoty standard". Przed uruchomieniem produkcyjnym platformy, należy zlecić zewnętrznej, wyspecjalizowanej firmie przeprowadzenie kontrolowanego ataku na system. Pentesterzy wcielą się w rolę hakera i spróbują złamać zabezpieczenia, a następnie przedstawią szczegółowy raport z rekomendacjami.
 
----
+Kluczowe Aspekty Techniczne: Pliki i Baza Danych
+Jak bezpiecznie przesyłać i odbierać pliki?
 
-### **Ulepszenie: Profesjonalna Analiza Prawna w Kontekście Testowania**
+To nie jest tylko kwestia "wgrania" pliku. To wieloetapowy proces:
 
-Testy automatyczne muszą odzwierciedlać nie tylko poprawność techniczną, ale i **ryzyka prawne**. Oto, jak rozszerzyć powyższe scenariusze o wymiar prawny:
+Transmisja (w locie): Cała komunikacja z serwerem musi być szyfrowana przy użyciu protokołu TLS 1.2 lub nowszego (HTTPS). To tworzy bezpieczny, szyfrowany tunel między przeglądarką klienta a serwerem, uniemożliwiając podsłuchanie transmisji (atak "Man-in-the-Middle").
 
-1.  **Test Integralności Dokumentu (Checksumming):**
-    *   **Problem Prawny:** Musimy mieć 100% pewności, że dokument przeanalizowany przez Operatora jest tym samym dokumentem, który wgrał Klient. Jakakolwiek podmiana lub uszkodzenie pliku podważa wiarygodność całego procesu.
-    *   **Implementacja w Teście:**
-        *   Po wgraniu pliku przez Klienta (krok 1.4), test automatycznie oblicza jego sumę kontrolną (np. SHA-256).
-        *   W kroku 2.4, kiedy Operator otwiera sprawę, test weryfikuje, czy suma kontrolna dokumentu widocznego w jego panelu jest **identyczna** z tą zapisaną w kroku 1.4.
+Przechowywanie (w spoczynku): Pliki na serwerze muszą być zaszyfrowane (Encryption at Rest). Nawet jeśli ktoś fizycznie ukradnie dysk serwera, dane będą bezużytecznym ciągiem znaków.
 
-2.  **Test Ścieżki Audytowej (Audit Trail):**
-    *   **Problem Prawny:** W przypadku sporu musimy być w stanie odtworzyć każdą akcję w systemie. Kto, co i kiedy zrobił?
-    *   **Implementacja w Teście:**
-        *   Po każdym kluczowym kroku scenariusza E2E (np. wgranie pliku, zatwierdzenie przez operatora, akceptacja klienta), test wykonuje dodatkowe zapytanie do bazy danych, aby sprawdzić, czy w tabeli `historia_zdarzen` (`audit_logs`) powstał odpowiedni wpis z poprawnym `caseId`, `userId` i `timestamp`.
+Logika Przechowywania:
 
-3.  **Test Kontroli Dostępu (Access Control):**
-    *   **Problem Prawny:** Ochrona tajemnicy zawodowej i danych osobowych (RODO). Operator A nie może mieć wglądu w sprawy Operatora B, a Klient X nie może przypadkowo zobaczyć dokumentów Klienta Y.
-    *   **Implementacja w Teście:**
-        *   Należy stworzyć dodatkowy scenariusz, w którym logujemy się jako `inny_operator@example.com` i próbujemy uzyskać dostęp do sprawy stworzonej przez `test_klienta` (np. przez bezpośrednie wklejenie URL).
-        *   Test musi potwierdzić, że system zwrócił błąd `403 Forbidden` (Brak dostępu) lub przekierował na stronę główną.
+Pliki nie mogą być przechowywane w publicznie dostępnym katalogu serwera WWW.
 
-4.  **Test Odpowiedzialności (Accountability & Disclaimers):**
-    *   **Problem Prawny:** Jasne określenie, że dokument został wygenerowany przez AI i zweryfikowany przez człowieka, jest kluczowe dla zarządzania odpowiedzialnością prawną.
-    *   **Implementacja w Teście:**
-        *   W kroku 3.6, po pobraniu finalnego dokumentu, test powinien nie tylko sprawdzić zmiany wprowadzone przez Operatora, ale również **przeanalizować treść pliku** w poszukiwaniu stopki lub klauzuli o treści: *"Niniejszy dokument został wygenerowany przy użyciu technologii AI i zweryfikowany przez Operatora nr [ID Operatora]"*.
+Nazwy plików na serwerze muszą być generowane losowo (np. uuid.pdf zamiast pozew_kowalski.pdf), aby uniemożliwić odgadnięcie ścieżki.
 
-Implementując testy w ten sposób, budują Państwo nie tylko sprawną aplikację, ale system o wysokim stopniu wiarygodności i bezpieczeństwa prawnego, co stanowi Państwa kluczową przewagę konkurencyjną.
+Dostęp do pliku musi być zawsze autoryzowany przez aplikację, która sprawdza uprawnienia użytkownika przed udostępnieniem strumienia danych.
+
+Czy wybór bazy danych jest kluczowy?
+
+Tak, ale nie chodzi o konkretną markę, a o sposób jej wykorzystania i konfiguracji.
+
+Dla projektu o takim charakterze PostgreSQL jest często rekomendowany ze względu na:
+
+Dojrzały model uprawnień: Umożliwia bardzo granularną kontrolę dostępu, włącznie z Row-Level Security (użytkownik widzi tylko te wiersze w tabeli, które do niego należą).
+
+Transakcyjność i spójność (ACID): Gwarantuje, że operacje są wykonywane w całości albo wcale, co jest kluczowe dla integralności danych prawnych.
+
+Niezależnie od wyboru, krytyczne jest, aby w testach sprawdzić:
+
+Odporność na SQL Injection: Czy wszystkie zapytania do bazy danych używają parametryzacji (prepared statements)? To absolutna podstawa, która chroni przed najpopularniejszym typem ataku na aplikacje webowe. Test polega na próbie wstrzyknięcia poleceń SQL w polach formularzy (np. w polu logowania).
+
+Szyfrowanie Połączenia: Czy połączenie między serwerem aplikacji a serwerem bazy danych jest szyfrowane?
+
+Minimalne Uprawnienia: Czy użytkownik bazy danych, z którego korzysta aplikacja, ma tylko te uprawnienia, które są mu absolutnie niezbędne (nie ma np. uprawnień administratora bazy)?
+
+Rekomendacja dla Kancelarii: Gdzie Kłaść Nacisk?
+
+Nacisk na bezpieczeństwo nie jest opcją, lecz absolutną koniecznością wynikającą z etyki zawodowej, przepisów RODO i fundamentalnej potrzeby ochrony reputacji.
+
+Poziom Minimum (Must-Have): Należy bezwzględnie zaimplementować i przetestować HTTPS na całej platformie, parametryzację zapytań SQL oraz rygorystyczną kontrolę dostępu (Operator widzi tylko swoje sprawy). To fundament, bez którego system nie może ruszyć.
+
+Poziom Standardowy (Zalecane): Należy wdrożyć Uwierzytelnianie Wieloskładnikowe (MFA) dla wszystkich użytkowników, a zwłaszcza dla Operatorów i Administratorów, oraz wdrożyć politykę silnych haseł i wygasania sesji.
+
+Poziom Złoty (Najwyższe Zaufanie): Przed startem produkcyjnym, kluczowe jest zlecenie zewnętrznego testu penetracyjnego. Jego koszt jest znikomą częścią potencjalnych strat wizerunkowych i finansowych wynikających z wycieku danych. Wynik takiego testu jest dla Państwa klientów najmocniejszym dowodem na to, że Kancelaria traktuje ich poufność z najwyższą powagą.
